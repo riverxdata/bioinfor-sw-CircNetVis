@@ -77,20 +77,24 @@ getcircinfo = function(input) {
 
     if (!is.null(pseudoCircSeq)){
       circRNAIDseq_res<-processcircRNAIDseqlist(pseudoCircSeq)
-      out = list(
-        RNAhybrid_cirmi.net = circRNAIDseq_res$RNAhybrid_cirmi.net,
-        miRanda_cirmi.net = circRNAIDseq_res$miRanda_cirmi.net,
-        TargetScan_cirmi.net = circRNAIDseq_res$TargetScan_cirmi.net
-      )
       
-      #combine results
-      # if (length(circRNA.in) > 0){
-      #   out = list(
-      #     RNAhybrid_cirmi.net = rbind(circRNAIDlist_res$RNAhybrid_cirmi.net,circRNAIDseq_res$RNAhybrid_cirmi.net),
-      #     miRanda_cirmi.net = rbind(circRNAIDlist_res$miRanda_cirmi.net,circRNAIDseq_res$miRanda_cirmi.net),
-      #     TargetScan_cirmi.net = rbind(circRNAIDlist_res$TargetScan_cirmi.net,circRNAIDseq_res$TargetScan_cirmi.net)
-      #       )
-      #   }
+#      combine results
+      if (length(circRNA.in) > 0){
+        #keep the same columns
+        circRNAIDseq_res$TargetScan_cirmi.net=circRNAIDseq_res$TargetScan_cirmi.net[,colnames(circRNAIDlist_res$TargetScan_cirmi.net)]
+        
+        out = list(
+          RNAhybrid_cirmi.net = rbind(circRNAIDlist_res$RNAhybrid_cirmi.net,circRNAIDseq_res$RNAhybrid_cirmi.net),
+          miRanda_cirmi.net = rbind(circRNAIDlist_res$miRanda_cirmi.net,circRNAIDseq_res$miRanda_cirmi.net),
+          TargetScan_cirmi.net = rbind(circRNAIDlist_res$TargetScan_cirmi.net,circRNAIDseq_res$TargetScan_cirmi.net)
+            )
+      }else{
+        out = list(
+          RNAhybrid_cirmi.net = circRNAIDseq_res$RNAhybrid_cirmi.net,
+          miRanda_cirmi.net = circRNAIDseq_res$miRanda_cirmi.net,
+          TargetScan_cirmi.net = circRNAIDseq_res$TargetScan_cirmi.net
+        )
+      }
     }
 
     return(out)
@@ -616,6 +620,7 @@ shinyServer(
       
       net = mynetwork()
       nodes <- net$x$nodes
+      nodes$label=as.character(nodes$label)
       edges <- net$x$edges
       edges_from = nodes$label[match(edges$from, nodes$id)] #circRNA
       edges_to = nodes$label[match(edges$to, nodes$id)] #miRNA
@@ -624,13 +629,25 @@ shinyServer(
       m = match(edges_from, hsaCirData_small$circRNA.ID)
       p1 = which(!is.na(m))
       if (length(p1) > 0)
-        edges_from[p1] = hsaCirData_small$normID[m[p1]]
+        #edges_from[p1] = hsaCirData_small$normID[m[p1]]
+        edges_from = c(edges_from,hsaCirData_small$normID[m[p1]])
       
       
       ### collect the current results
       RNAhybrid_cirmi.net = circInfo$RNAhybrid_cirmi.net
       miRanda_cirmi.net = circInfo$miRanda_cirmi.net
       TargetScan_cirmi.net = circInfo$TargetScan_cirmi.net
+      
+      RNAhybrid_cirmi.net$miRNA=as.character(RNAhybrid_cirmi.net$miRNA)
+      RNAhybrid_cirmi.net$normID=as.character(RNAhybrid_cirmi.net$normID)
+
+      miRanda_cirmi.net$miRNA=as.character(miRanda_cirmi.net$miRNA)
+      miRanda_cirmi.net$normID=as.character(miRanda_cirmi.net$normID)
+      
+      TargetScan_cirmi.net$miRNA=as.character(TargetScan_cirmi.net$miRNA)
+      TargetScan_cirmi.net$normID=as.character(TargetScan_cirmi.net$normID)
+      
+      #save(net, RNAhybrid_cirmi.net, miRanda_cirmi.net, TargetScan_cirmi.net, file="test.RData")
       
       RNAhybrid_cirmi.net = RNAhybrid_cirmi.net[which(
         RNAhybrid_cirmi.net$miRNA %in% c(edges_from, edges_to) &
@@ -653,6 +670,7 @@ shinyServer(
       ### then create migen.net
       ## get miRNA-mRNA interactions
       miRNAset = unique(as.character(cirmi.net.short$miRNA))
+
       pick = targetscan_db$miRNA %in% miRNAset
       migen.net = targetscan_db[pick, ]
       migen.net = migen.net[order(migen.net$weighted.context...score, decreasing = FALSE), ]
@@ -687,17 +705,20 @@ shinyServer(
       
       m = match(cirmi.net$normID, hsaCirData_small$normID)
       p1 = which(!is.na(m))
-      if (length(p1) > 0)
-        cirmi.net$int[p1] = hsaCirData_small$circRNA.ID[m[p1]]
+      if (length(p1) > 0) cirmi.net$int[p1] = hsaCirData_small$circRNA.ID[m[p1]] else cirmi.net$int=cirmi.net$normID
       colnames(cirmi.net)[1] = "circRNA"
       x=colnames(cirmi.net)
       x=c(setdiff(x,"normID"),"normID") #put normID to the end
       cirmi.net=cirmi.net[,x]
-      
+
+      m = match(cirmi.net$circRNA, hsaCirData_small$circRNA.ID)
+      p1 = which(!is.na(m))
+      if (length(p1) > 0) cirmi.net$normID[p1] = hsaCirData_small$normID[m[p1]]
       
       rownames(cirmi.net)=NULL
       rownames(migen.net)=NULL
       
+
       return(list(migen.net = migen.net, cirmi.net = cirmi.net))
       #return(cirmi.net)
     }
@@ -794,8 +815,10 @@ shinyServer(
     # })
     
     observeEvent(input$cbShowcircRNAseqlist, {
-      if (input$cbShowcircRNAseqlist)
+      if (input$cbShowcircRNAseqlist){
+        updateTextAreaInput(session, "circRNAinput", value = "")
         shinyjs::show("circRNAseqlist")
+      }
       else
         shinyjs::hide("circRNAseqlist")
     })
