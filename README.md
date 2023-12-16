@@ -7,13 +7,15 @@ CircNetVis is built based on Rshiny running in linux environment. This GitHub pa
 
 Steps to run CircNetVis in a local computer:
 
-- Install the following R packages: shinythemes, shiny, shinysky, shinyjs, visNetwork, doParallel, DT, rjson, RSQLite, dbplyr, DBI, dplyr, data.table
+- Install the following R packages: shinythemes, shiny, shinyjs, visNetwork, doParallel, DT, rjson, RSQLite, dbplyr, DBI, dplyr, data.table
 
 - Download or clone CircNetVis from its GitHub: https://github.com/nghiavtr/CircNetVis
 
-- Download CircNetVis_resources.tar.gz from the zenodo repository: https://doi.org/10.5281/zenodo.8170641
+- Download CircNetVis_resources.tar.gz and CircNetVis_mm9_resources.tar.gz from the zenodo repository: https://doi.org/10.5281/zenodo.10394426
 
 - Uncompressed CircNetVis_resources.tar.gz and copy all files to the CircNetVis folder
+
+- Uncompressed CircNetVis_mm9_resources.tar.gz and copy all files to the CircNetVis_mm9 folder
 
 
 Now the CircNetVis is ready to use locally in your computer.
