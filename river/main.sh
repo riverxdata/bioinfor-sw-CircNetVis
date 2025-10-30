@@ -4,7 +4,7 @@ if [ -d "CircNetVis_mm9/Tools" ]; then
     echo "CircNetVis_mm9 resources already exist."
 else
     wget https://zenodo.org/records/10394426/files/CircNetVis_mm9_resources.tar.gz?download=1 -O CircNetVis_mm9_resources.tar.gz
-    tar -xvzf CircNetVis_mm9_resources.tar.gz -C CircNetVis_mm9 --strip-components 1
+    tar -xvzf CircNetVis_mm9_resources.tar.gz -C CircNetVis_mm9 --strip-components 1 --no-same-owner
 fi
 # Run the Shiny app
 eval "$(pixi shell-hook)"
