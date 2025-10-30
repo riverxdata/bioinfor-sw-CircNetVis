@@ -8,4 +8,4 @@ else
 fi
 # Run the Shiny app
 eval "$(pixi shell-hook)"
-Rscript -e "shiny::runApp('CircNetVis_mm9')"
+Rscript -e "shiny::runApp('CircNetVis_mm9',host='0.0.0.0',port=$PORT)"
